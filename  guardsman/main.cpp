@@ -10,6 +10,7 @@ int main ()
 {
       guardsman g;
       //g.print();
+      std::cout<<g.reade_file("c")<<std::endl;
       return 0;
 }
 

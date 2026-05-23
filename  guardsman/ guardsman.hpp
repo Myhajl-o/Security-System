@@ -315,32 +315,32 @@ class guardsman
             XOR(sec_key1_1,secret_key);
             //////////////////////////////////////////////////////////////
             Hash="";
-            Keya2_1.seekg(0,std::ios::end);
-            key_size = Keya2_1.tellg();
-            Keya2_1.seekg(0,std::ios::beg);
-            sec_key1_2.resize(key_size);
-            Keya2_1.read(sec_key1_2.data(),key_size);
-            //------------------------------------------
-            Keya2_H.seekg(0,std::ios::end);
-            key_size = Keya2_H.tellg();
-            Keya2_H.seekg(0,std::ios::beg);
-            Hash.resize(key_size);
-            Keya2_H.read(Hash.data(),key_size);
-            if(!checking_key(sec_key1_2,Hash)) return false ;
-            XOR(sec_key1_2,secret_key);
-            //////////////////////////////////////////////////////////////
-            Hash="";
             Keya3_1.seekg(0,std::ios::end);
             key_size = Keya3_1.tellg();
             Keya3_1.seekg(0,std::ios::beg);
-            sec_key1_2_Hash.resize(key_size);
-            Keya3_1.read(sec_key1_2_Hash.data(),key_size);
+            sec_key1_2.resize(key_size);
+            Keya3_1.read(sec_key1_2.data(),key_size);
             //------------------------------------------
             Keya3_H.seekg(0,std::ios::end);
             key_size = Keya3_H.tellg();
             Keya3_H.seekg(0,std::ios::beg);
             Hash.resize(key_size);
             Keya3_H.read(Hash.data(),key_size);
+            if(!checking_key(sec_key1_2,Hash)) return false ;
+            XOR(sec_key1_2,secret_key);
+            //////////////////////////////////////////////////////////////
+            Hash="";
+            Keya2_1.seekg(0,std::ios::end);
+            key_size = Keya2_1.tellg();
+            Keya2_1.seekg(0,std::ios::beg);
+            sec_key1_2_Hash.resize(key_size);
+            Keya2_1.read(sec_key1_2_Hash.data(),key_size);
+            //------------------------------------------
+            Keya2_H.seekg(0,std::ios::end);
+            key_size = Keya2_H.tellg();
+            Keya2_H.seekg(0,std::ios::beg);
+            Hash.resize(key_size);
+            Keya2_H.read(Hash.data(),key_size);
             if(!checking_key(sec_key1_2_Hash,Hash)) return false ;
             XOR(sec_key1_2_Hash,secret_key);
             //////////////////////////////////////////////////////////////
@@ -360,32 +360,32 @@ class guardsman
             XOR(sec_key2_1,secret_key);
             //////////////////////////////////////////////////////////////
             Hash="";
-            Keyb2_1.seekg(0,std::ios::end);
-            key_size = Keyb2_1.tellg();
-            Keyb2_1.seekg(0,std::ios::beg);
-            sec_key2_2.resize(key_size);
-            Keyb2_1.read(sec_key2_2.data(),key_size);
-            //------------------------------------------
-            Keyb2_H.seekg(0,std::ios::end);
-            key_size = Keyb2_H.tellg();
-            Keyb2_H.seekg(0,std::ios::beg);
-            Hash.resize(key_size);
-            Keyb2_H.read(Hash.data(),key_size);
-            if(!checking_key(sec_key2_2,Hash)) return false ;
-            XOR(sec_key2_2,secret_key);
-            //////////////////////////////////////////////////////////////
-            Hash="";
             Keyb3_1.seekg(0,std::ios::end);
             key_size = Keyb3_1.tellg();
             Keyb3_1.seekg(0,std::ios::beg);
-            sec_key2_2_Hash.resize(key_size);
-            Keyb3_1.read(sec_key2_2_Hash.data(),key_size);
+            sec_key2_2.resize(key_size);
+            Keyb3_1.read(sec_key2_2.data(),key_size);
             //------------------------------------------
             Keyb3_H.seekg(0,std::ios::end);
             key_size = Keyb3_H.tellg();
             Keyb3_H.seekg(0,std::ios::beg);
             Hash.resize(key_size);
             Keyb3_H.read(Hash.data(),key_size);
+            if(!checking_key(sec_key2_2,Hash)) return false ;
+            XOR(sec_key2_2,secret_key);
+            //////////////////////////////////////////////////////////////
+            Hash="";
+            Keyb2_1.seekg(0,std::ios::end);
+            key_size = Keyb2_1.tellg();
+            Keyb2_1.seekg(0,std::ios::beg);
+            sec_key2_2_Hash.resize(key_size);
+            Keyb2_1.read(sec_key2_2_Hash.data(),key_size);
+            //------------------------------------------
+            Keyb2_H.seekg(0,std::ios::end);
+            key_size = Keyb2_H.tellg();
+            Keyb2_H.seekg(0,std::ios::beg);
+            Hash.resize(key_size);
+            Keyb2_H.read(Hash.data(),key_size);
             if(!checking_key(sec_key2_2_Hash,Hash)) return false ;
             XOR(sec_key2_2_Hash,secret_key);
             /////////////////////////////////////////////////////////////
@@ -445,12 +445,6 @@ class guardsman
             Key1_2H.seekg(0,std::ios::beg);
             Hash.resize(key_size);
             Key1_2H.read(Hash.data(),key_size);
-            std::cout << "\n--- РОЗТИН ХЕШІВ ---" << std::endl;
-            std::string h1 = createHash(key1, sec_key1_2_Hash);
-            std::string h2 = special_XOR(Hash, sec_key1_2);
-            std::cout << "Ліва частина (створений хеш): " << h1 << std::endl;
-            std::cout << "Права частина (розшифрований з файлу): " << h2 << std::endl;
-            std::cout << "--------------------\n" << std::endl;
             if(!checking(key1,Hash,sec_key1_2_Hash,sec_key1_2))
             {
                   Key1_1.close();
@@ -508,13 +502,12 @@ class guardsman
 
       bool change_cipher()
       {
-            std::filesystem::path c;
+            std::filesystem::path c = "c";
             std::ifstream Data_f(c/"data", std::ios::in | std::ios::binary);
             std::ifstream Hash_f(c/"hash", std::ios::in | std::ios::binary);
-      
 
-            if(!Data_f.is_open() || !Hash_f.is_open()) return false;
-
+            if(!Data_f.is_open())return false;
+            if(!Hash_f.is_open())return false;
             std::string text;
             size_t size_f(0);
             std::string Hash;
@@ -529,8 +522,12 @@ class guardsman
             size_f = Hash_f.tellg();
             Hash_f.seekg(0,std::ios::beg);
             Hash.resize(size_f);
-            Hash_f.read(text.data(),size_f);
-            if(!checking(text,Hash,Hash_key,key2)) return false;
+            Hash_f.read(Hash.data(),size_f);
+            std::cout<<"----------------------------"<<std::endl;
+            std::cout<<"1. Hash -- "<<createHash(text,Hash_key)<<std::endl;
+            std::cout<<"2. Hash -- "<<special_XOR(Hash,key2)<<std::endl;
+            std::cout<<"-----------------------------"<<std::endl;
+            if(!checking(text,Hash,Hash_key,key2)){std::cout<<"3"<<std::endl ;return false; }
             Data_f.close();
             Hash_f.close();
             
@@ -639,11 +636,6 @@ class guardsman
       guardsman()
       {
             get_key();
-            Gen_temp();
-
-            if(!writing_a_main_key()) std::cout<<"1"<<std::endl;
-
-            if(!writing_a_secondary_key()) std::cout<<"2"<<std::endl; 
 
             //if(!check_file()) std::cout<<"3"<<std::endl;
 
