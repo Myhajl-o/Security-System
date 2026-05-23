@@ -176,17 +176,6 @@ class guardsman
             XOR(sec_Hash_key,secret_key);
             Hash_Key.write(sec_Hash_key.data(),sec_Hash_key.size());
 
-/*          
-            Key1_1.write(sec_key1_1.data(),sec_key1_1.size());
-            Key1_2.write(sec_key1_2.data(),sec_key1_2.size());
-            Key1_H.write(sec_key1_2_Hash.data(),sec_key1_2_Hash.size());
-
-            Key2_1.write(sec_key2_1.data(),sec_key2_1.size());
-            Key2_2.write(sec_key2_2.data(),sec_key2_2.size());
-            Key2_H.write(sec_key2_2_Hash.data(),sec_key2_2_Hash.size());
-
-            Hash_Key.write(sec_Hash_Key.data(),sec_Hash_Key.size());
-*/
             Keya1_1.close();
             Keya1_H.close();
             Keya2_1.close();
@@ -523,11 +512,7 @@ class guardsman
             Hash_f.seekg(0,std::ios::beg);
             Hash.resize(size_f);
             Hash_f.read(Hash.data(),size_f);
-            std::cout<<"----------------------------"<<std::endl;
-            std::cout<<"1. Hash -- "<<createHash(text,Hash_key)<<std::endl;
-            std::cout<<"2. Hash -- "<<special_XOR(Hash,key2)<<std::endl;
-            std::cout<<"-----------------------------"<<std::endl;
-            if(!checking(text,Hash,Hash_key,key2)){std::cout<<"3"<<std::endl ;return false; }
+            if(!checking(text,Hash,Hash_key,key2)){std::cout<<"Не правельний хеш"<<std::endl ;return false; }
             Data_f.close();
             Hash_f.close();
             
@@ -637,11 +622,9 @@ class guardsman
       {
             get_key();
 
-            //if(!check_file()) std::cout<<"3"<<std::endl;
-
-
-            if(!reading_second_key()){ std::cout<<"4"<<std::endl; /*hell();*/}
-            if(!reading_main_key()){std::cout<<"5"<<std::endl; /*hell();*/}
+            if(!check_file()){ std::cout<<"файлів не знайдено"<<std::endl; std::exit(1);}
+            if(!reading_second_key()){ std::cout<<"пошкодження допомігних ключів"<<std::endl; std::exit(1);}
+            if(!reading_main_key()){std::cout<<"пошкодження головних ключів"<<std::endl; std::exit(1);}
 
       }
 
@@ -661,58 +644,46 @@ class guardsman
             Hash_f.close();
       }
 
-      std::string reade_file(const std::filesystem::path folder)
+      bool reade_file(std::string& text,const std::filesystem::path folder)
       {
             std::filesystem::create_directories(folder);
             std::ifstream Data_f(folder/"data", std::ios::in | std::ios::binary);
             std::ifstream Hash_f(folder/"hash", std::ios::in | std::ios::binary);
       
-            std::string text;
+            if(!Data_f.is_open()) return false;
+            if(!Hash_f.is_open()) return false;
+
+            std::string text_temp;
             size_t size_f(0);
             std::string Hash;
 
             Data_f.seekg(0,std::ios::end);
             size_f = Data_f.tellg();
             Data_f.seekg(0,std::ios::beg);
-            text.resize(size_f);
-            Data_f.read(text.data(),size_f);
+            text_temp.resize(size_f);
+            Data_f.read(text_temp.data(),size_f);
             //---------------------------------
             Hash_f.seekg(0,std::ios::end);
             size_f = Hash_f.tellg();
             Hash_f.seekg(0,std::ios::beg);
             Hash.resize(size_f);
             Hash_f.read(Hash.data(),size_f);
-            if(!checking(text,Hash,Hash_key,key2)) return "6";
-
+            if(!checking(text_temp,Hash,Hash_key,key2)){ return false; }
+            text=text_temp;
+            XOR(text,key1);
             Data_f.close();
             Hash_f.close();
-            return special_XOR(text,key1);
+            return true;
       }
-
-      void print()
-      {
-            std::cout<<"key1: "<<key1<<std::endl;
-            std::cout<<"key2: "<<key2<<std::endl;
-            std::cout<<"Hash_key: "<<Hash_key<<std::endl;
-            std::cout<<""<<std::endl;
-            std::cout<<""<<std::endl;
-            std::cout<<""<<std::endl;
-            std::cout<<""<<std::endl;
-            std::cout<<""<<std::endl;
-            std::cout<<""<<std::endl;
-            std::cout<<""<<std::endl;
-            std::cout<<""<<std::endl;
-      }
-
 
       ~guardsman()
       {
             Gen_temp();
 
-            if(!change_cipher()) std::cout<<"7"<<std::endl;;
+            if(!change_cipher()){ std::cout<<"Пробелема під час перезаписування"<<std::endl; std::exit(1); }
 
-            if(!writing_a_main_key()) std::cout<<"8"<<std::endl;
+            if(!writing_a_main_key()){ std::cout<<"Проблема під час запису головних ключів"<<std::endl; std::exit(1) ;}
 
-            if(!writing_a_secondary_key()) std::cout<<"9"<<std::endl; 
+            if(!writing_a_secondary_key()){ std::cout<<"Проблема під час запису додаткових ключів"<<std::endl; std::exit(1) ;} 
       }
 };

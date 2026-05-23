@@ -9,8 +9,9 @@
 int main ()
 {
       guardsman g;
-      //g.print();
-      std::cout<<g.reade_file("c")<<std::endl;
+      std::string text;
+      if(!g.reade_file(text,"c")) return 1;
+      std::cout<<text<<std::endl;
       return 0;
 }
 
