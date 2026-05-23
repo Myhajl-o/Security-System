@@ -23,7 +23,6 @@ class guardsman
 
       void XOR (std::string& text,const std::string& cipher)
       {
-            if((text.size()<4)||cipher.size()<10){ text="Is that a joke?"; return;}
             size_t j(0);
             for(size_t i(0);i<text.size();++i)
             {
@@ -41,7 +40,6 @@ class guardsman
 
       std::string special_XOR (std::string text,const std::string& cipher)
       {
-            if((text.size()<4)||cipher.size()<10) return "Is that a joke?";
             size_t j(0);
             for(size_t i(0);i<text.size();++i)
             {
@@ -80,11 +78,11 @@ class guardsman
             unsigned int seed1 = std::hash<std::string>{}(secret_key);
       
             std::mt19937 gen(seed1);
-            std::uniform_int_distribution<char> dist('!', '~');
+            std::uniform_int_distribution<int> dist(0, 255);
             secret_key2 = "";
             for(size_t i(0); i < 64; ++i)
             {
-                  char random_char = dist(gen);
+                  char random_char = static_cast<char>(dist(gen));
                   secret_key2 += random_char;
             }
             unsigned int seed2 = std::hash<std::string>{}(secret_key2);
@@ -93,14 +91,13 @@ class guardsman
             secret_Hash_key = "";
             for(size_t i(0); i < 64; ++i)
             {
-                  char random_char = dist(gen);
+                  char random_char = static_cast<char>(dist(gen));
                   secret_Hash_key += random_char;
             }
       }
 
 
-      //додати перевірку
-      void writing_a_secondary_key()
+      bool writing_a_secondary_key()
       {
             std::filesystem::path a="a";
             std::filesystem::create_directories(a);
@@ -119,6 +116,24 @@ class guardsman
             
 
             std::ofstream Hash_Key(a/"c", std::ios::out | std::ios::binary);
+
+
+            if(!Keya1_1.is_open() ||
+            !Keya1_H.is_open() ||
+            !Keya2_1.is_open() ||
+            !Keya2_H.is_open() ||
+            !Keya3_1.is_open() ||
+            !Keya3_H.is_open() ||
+            !Keyb1_1.is_open() ||
+            !Keyb1_H.is_open() ||
+            !Keyb2_1.is_open() ||
+            !Keyb2_H.is_open() ||
+            !Keyb3_1.is_open() ||
+            !Keyb3_H.is_open() ||
+            !Hash_Key.is_open())
+            {
+                  return false;
+            }
 
             std::string Hash;
 
@@ -185,9 +200,11 @@ class guardsman
             Keyb3_1.close();
             Keyb3_H.close();
             Hash_Key.close();
+            return true;
       }
-      //додати перевірку
-      void writing_a_main_key ()
+
+
+      bool writing_a_main_key ()
       {
             std::filesystem::path b="b";
             std::filesystem::create_directories(b);
@@ -197,6 +214,11 @@ class guardsman
             std::ofstream Key2_2H(b/"b2H", std::ios::out | std::ios::binary);
 
             std::ofstream Hash_Key(b/"c", std::ios::out | std::ios::binary);
+
+            if(!Key1_1.is_open() || !Key1_2H.is_open() || !Key2_1.is_open() || !Key2_2H.is_open() || !Hash_Key.is_open())
+            {
+                  return false;
+            }
 
             XOR(temp1,sec_key1_1);
             Key1_1.write(temp1.data(),temp1.size());
@@ -218,6 +240,7 @@ class guardsman
             Key2_1.close();
             Key2_2H.close();
             Hash_Key.close();
+            return true;
       }
 
       std::string Generate()
@@ -225,10 +248,10 @@ class guardsman
             std::string text;
             std::random_device rd;
             std::mt19937 gen(rd());
-            std::uniform_int_distribution<char> dist('!', '~');
+            std::uniform_int_distribution<int> dist(0, 255);
             for(size_t i(0);i<64;++i)
             {
-                  char random_char = dist(gen);
+                  char random_char = static_cast<char>(dist(gen));
                   text+=random_char;
             }
             return text;
@@ -422,7 +445,21 @@ class guardsman
             Key1_2H.seekg(0,std::ios::beg);
             Hash.resize(key_size);
             Key1_2H.read(Hash.data(),key_size);
-            if(!checking(key1,Hash,sec_key1_2_Hash,sec_key1_2)) return false ;
+            std::cout << "\n--- РОЗТИН ХЕШІВ ---" << std::endl;
+            std::string h1 = createHash(key1, sec_key1_2_Hash);
+            std::string h2 = special_XOR(Hash, sec_key1_2);
+            std::cout << "Ліва частина (створений хеш): " << h1 << std::endl;
+            std::cout << "Права частина (розшифрований з файлу): " << h2 << std::endl;
+            std::cout << "--------------------\n" << std::endl;
+            if(!checking(key1,Hash,sec_key1_2_Hash,sec_key1_2))
+            {
+                  Key1_1.close();
+                  Key1_2H.close();
+                  Key2_1.close();
+                  Key2_2H.close();
+                  Hash_Key.close();
+                  return false ;
+            } 
             XOR(key1,sec_key1_1);
             ////////////////////////////////////////////////////////////////////////
             Hash="";
@@ -437,7 +474,15 @@ class guardsman
             Key2_2H.seekg(0,std::ios::beg);
             Hash.resize(key_size);
             Key2_2H.read(Hash.data(),key_size);
-            if(!checking(key2,Hash,sec_key2_2_Hash,sec_key2_2)) return false ;
+            if(!checking(key2,Hash,sec_key2_2_Hash,sec_key2_2))
+            {
+                  Key1_1.close();
+                  Key1_2H.close();
+                  Key2_1.close();
+                  Key2_2H.close();
+                  Hash_Key.close();
+                  return false ;
+            }
             XOR(key2,sec_key2_1);
             //////////////////////////////////////////////////////
             Hash_Key.seekg(0,std::ios::end);
@@ -460,14 +505,16 @@ class guardsman
       {
             for(size_t i(3);i>=0;--i){}
       }
-      //додати перевірку
-      void change_cipher()
+
+      bool change_cipher()
       {
             std::filesystem::path c;
-            std::filesystem::create_directories(c);
             std::ifstream Data_f(c/"data", std::ios::in | std::ios::binary);
             std::ifstream Hash_f(c/"hash", std::ios::in | std::ios::binary);
       
+
+            if(!Data_f.is_open() || !Hash_f.is_open()) return false;
+
             std::string text;
             size_t size_f(0);
             std::string Hash;
@@ -483,7 +530,7 @@ class guardsman
             Hash_f.seekg(0,std::ios::beg);
             Hash.resize(size_f);
             Hash_f.read(text.data(),size_f);
-            // тут
+            if(!checking(text,Hash,Hash_key,key2)) return false;
             Data_f.close();
             Hash_f.close();
             
@@ -502,23 +549,108 @@ class guardsman
 
             Data_f1.close();
             Hash_f1.close();
+            return true;
       }
       
+      size_t check_file()
+      {
+            std::filesystem::path a="a";
+            std::ifstream Keya1_1(a/"a1", std::ios::in | std::ios::binary);
+            std::ifstream Keya1_H(a/"a1_H", std::ios::in | std::ios::binary);
+            std::ifstream Keya2_1(a/"a2", std::ios::in | std::ios::binary);
+            std::ifstream Keya2_H(a/"a2_H", std::ios::in | std::ios::binary);
+            std::ifstream Keya3_1(a/"a3", std::ios::in | std::ios::binary);
+            std::ifstream Keya3_H(a/"a3_H", std::ios::in | std::ios::binary);
+            std::ifstream Keyb1_1(a/"b1", std::ios::in | std::ios::binary);
+            std::ifstream Keyb1_H(a/"b1_H", std::ios::in | std::ios::binary);
+            std::ifstream Keyb2_1(a/"b2", std::ios::in | std::ios::binary);
+            std::ifstream Keyb2_H(a/"b2_H", std::ios::in | std::ios::binary);
+            std::ifstream Keyb3_1(a/"b3", std::ios::in | std::ios::binary);
+            std::ifstream Keyb3_H(a/"b3_H", std::ios::in | std::ios::binary);
+            std::ifstream Hash_Key_second(a/"c", std::ios::in | std::ios::binary);
+
+
+            
+            if(!Keya1_1.is_open() ||
+            !Keya1_H.is_open() ||
+            !Keya2_1.is_open() ||
+            !Keya2_H.is_open() ||
+            !Keya3_1.is_open() ||
+            !Keya3_H.is_open() ||
+            !Keyb1_1.is_open() ||
+            !Keyb1_H.is_open() ||
+            !Keyb2_1.is_open() ||
+            !Keyb2_H.is_open() ||
+            !Keyb3_1.is_open() ||
+            !Keyb3_H.is_open() ||
+            !Hash_Key_second.is_open())
+            {
+                  return false;
+            }
+            std::filesystem::path b="b";
+            std::ifstream Key1_1(b/"a1", std::ios::in | std::ios::binary);
+            std::ifstream Key1_2H(b/"a2H", std::ios::in | std::ios::binary);
+            std::ifstream Key2_1(b/"b1", std::ios::in | std::ios::binary);
+            std::ifstream Key2_2H(b/"b2H", std::ios::in | std::ios::binary);
+            std::ifstream Hash_Key(b/"c", std::ios::in | std::ios::binary);
+            
+            if(!Key1_1.is_open() || !Key1_2H.is_open() || !Key2_1.is_open() || !Key2_2H.is_open() || !Hash_Key.is_open())
+            {
+                  return false;
+            }
+            std::filesystem::path c="c";
+            std::ifstream Data_f(c/"data", std::ios::in | std::ios::binary);
+            std::ifstream Hash_f(c/"hash", std::ios::in | std::ios::binary);
+
+            if(!Data_f.is_open() || !Hash_f.is_open())
+            {
+                  return false;
+            }
+
+
+
+            Keya1_1.close();
+            Keya1_H.close();
+            Keya2_1.close();
+            Keya2_H.close();
+            Keya3_1.close();
+            Keya3_H.close();
+            Keyb1_1.close();
+            Keyb1_H.close();
+            Keyb2_1.close();
+            Keyb2_H.close();
+            Keyb3_1.close();
+            Keyb3_H.close();
+            Hash_Key_second.close();
+
+            Key1_1.close();
+            Key1_2H.close();
+            Key2_1.close();
+            Key2_2H.close();
+            Hash_Key.close();
+
+            Data_f.close();
+            Hash_f.close();
+            return true;
+      }
 
       public:
 
       guardsman()
       {
             get_key();
-
             Gen_temp();
 
-            writing_a_main_key ();
+            if(!writing_a_main_key()) std::cout<<"1"<<std::endl;
 
-            writing_a_secondary_key(); 
+            if(!writing_a_secondary_key()) std::cout<<"2"<<std::endl; 
 
-            if(!reading_second_key()){ std::cout<<"I hate u nig"<<std::endl; /*hell();*/}
-            if(!reading_main_key()){std::cout<<"I hate u nig"<<std::endl; /*hell();*/}
+            //if(!check_file()) std::cout<<"3"<<std::endl;
+
+
+            if(!reading_second_key()){ std::cout<<"4"<<std::endl; /*hell();*/}
+            if(!reading_main_key()){std::cout<<"5"<<std::endl; /*hell();*/}
+
       }
 
       void create_file(std::string& text,const std::filesystem::path folder)
@@ -536,7 +668,7 @@ class guardsman
             Data_f.close();
             Hash_f.close();
       }
-      //доддати перевірку
+
       std::string reade_file(const std::filesystem::path folder)
       {
             std::filesystem::create_directories(folder);
@@ -558,13 +690,26 @@ class guardsman
             Hash_f.seekg(0,std::ios::beg);
             Hash.resize(size_f);
             Hash_f.read(Hash.data(),size_f);
-            if(!checking(text,Hash,Hash_key,key2)) return "Іди нахуй далбайоб";
-
-            XOR(text,key1);
+            if(!checking(text,Hash,Hash_key,key2)) return "6";
 
             Data_f.close();
             Hash_f.close();
-            return text;
+            return special_XOR(text,key1);
+      }
+
+      void print()
+      {
+            std::cout<<"key1: "<<key1<<std::endl;
+            std::cout<<"key2: "<<key2<<std::endl;
+            std::cout<<"Hash_key: "<<Hash_key<<std::endl;
+            std::cout<<""<<std::endl;
+            std::cout<<""<<std::endl;
+            std::cout<<""<<std::endl;
+            std::cout<<""<<std::endl;
+            std::cout<<""<<std::endl;
+            std::cout<<""<<std::endl;
+            std::cout<<""<<std::endl;
+            std::cout<<""<<std::endl;
       }
 
 
@@ -572,10 +717,10 @@ class guardsman
       {
             Gen_temp();
 
-            change_cipher();
+            if(!change_cipher()) std::cout<<"7"<<std::endl;;
 
-            writing_a_main_key ();
+            if(!writing_a_main_key()) std::cout<<"8"<<std::endl;
 
-            writing_a_secondary_key(); 
+            if(!writing_a_secondary_key()) std::cout<<"9"<<std::endl; 
       }
 };

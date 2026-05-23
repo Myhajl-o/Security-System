@@ -9,9 +9,7 @@
 int main ()
 {
       guardsman g;
-      std::string hey = "Wello world";
-      g.create_file(hey,"c");
-      std::cout<<g.reade_file("c")<<std::endl;
+      //g.print();
       return 0;
 }
 
