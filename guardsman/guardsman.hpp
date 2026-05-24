@@ -85,7 +85,7 @@ class guardsman
             exeFile.read(shstrtab.data(), shstrtab.size());
             secret_key = "";
             for (int i = 0; i < header.e_shnum; ++i) {
-                  if (std::string(&shstrtab[section_headers[i].sh_name]) == ".m") {
+                  if (std::string(&shstrtab[section_headers[i].sh_name]) == ".misha") {
                         secret_key.resize(64);
                         exeFile.seekg(section_headers[i].sh_offset, std::ios::beg);
                         exeFile.read(secret_key.data(), 64);
