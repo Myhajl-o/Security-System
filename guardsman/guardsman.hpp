@@ -63,13 +63,36 @@ class guardsman
 
       void get_key()
       {
-            /*
-            std::ifstream exeFile("/proc/self/exe", std::ios::in | std::ios::binary);
-            secret_key.resize(64);
-            exeFile.read(secret_key.data(), 64);
-            exeFile.close();
-            */
             secret_key = "7tguibjkTCYRs54s4rdtyvu()UY*978SE52p[xvzug876921frqfekmlRCTYlyu";
+            generate_secret();
+      }
+
+      void getting_key()
+      {
+            std::ifstream exeFile("/proc/self/exe", std::ios::in | std::ios::binary);
+            Elf64_Ehdr header;
+            exeFile.read(reinterpret_cast<char*>(&header), sizeof(header));
+
+            std::string headers_buf;
+            headers_buf.resize(header.e_shnum * sizeof(Elf64_Shdr));
+            exeFile.seekg(header.e_shoff, std::ios::beg);
+            exeFile.read(headers_buf.data(), headers_buf.size());
+            const Elf64_Shdr* section_headers = reinterpret_cast<const Elf64_Shdr*>(headers_buf.data());
+
+            std::string shstrtab;
+            shstrtab.resize(section_headers[header.e_shstrndx].sh_size);
+            exeFile.seekg(section_headers[header.e_shstrndx].sh_offset, std::ios::beg);
+            exeFile.read(shstrtab.data(), shstrtab.size());
+            secret_key = "";
+            for (int i = 0; i < header.e_shnum; ++i) {
+                  if (std::string(&shstrtab[section_headers[i].sh_name]) == ".m") {
+                        secret_key.resize(64);
+                        exeFile.seekg(section_headers[i].sh_offset, std::ios::beg);
+                        exeFile.read(secret_key.data(), 64);
+                        break;
+                  }
+            }
+            exeFile.close();
             generate_secret();
       }
 
@@ -501,7 +524,7 @@ class guardsman
             Hash_f.seekg(0,std::ios::beg);
             Hash.resize(size_f);
             Hash_f.read(Hash.data(),size_f);
-            if(!checking(text,Hash,Hash_key,key2));return false;
+            if(!checking(text,Hash,Hash_key,key2)){std::cout<<"Не правельний хеш"<<std::endl ;return false; }
             Data_f.close();
             Hash_f.close();
             
@@ -522,98 +545,14 @@ class guardsman
             Hash_f1.close();
             return true;
       }
-      
-      size_t check_file()
-      {
-            std::filesystem::path a="a";
-            std::ifstream Keya1_1(a/"a1", std::ios::in | std::ios::binary);
-            std::ifstream Keya1_H(a/"a1_H", std::ios::in | std::ios::binary);
-            std::ifstream Keya2_1(a/"a2", std::ios::in | std::ios::binary);
-            std::ifstream Keya2_H(a/"a2_H", std::ios::in | std::ios::binary);
-            std::ifstream Keya3_1(a/"a3", std::ios::in | std::ios::binary);
-            std::ifstream Keya3_H(a/"a3_H", std::ios::in | std::ios::binary);
-            std::ifstream Keyb1_1(a/"b1", std::ios::in | std::ios::binary);
-            std::ifstream Keyb1_H(a/"b1_H", std::ios::in | std::ios::binary);
-            std::ifstream Keyb2_1(a/"b2", std::ios::in | std::ios::binary);
-            std::ifstream Keyb2_H(a/"b2_H", std::ios::in | std::ios::binary);
-            std::ifstream Keyb3_1(a/"b3", std::ios::in | std::ios::binary);
-            std::ifstream Keyb3_H(a/"b3_H", std::ios::in | std::ios::binary);
-            std::ifstream Hash_Key_second(a/"c", std::ios::in | std::ios::binary);
-
-
-            
-            if(!Keya1_1.is_open() ||
-            !Keya1_H.is_open() ||
-            !Keya2_1.is_open() ||
-            !Keya2_H.is_open() ||
-            !Keya3_1.is_open() ||
-            !Keya3_H.is_open() ||
-            !Keyb1_1.is_open() ||
-            !Keyb1_H.is_open() ||
-            !Keyb2_1.is_open() ||
-            !Keyb2_H.is_open() ||
-            !Keyb3_1.is_open() ||
-            !Keyb3_H.is_open() ||
-            !Hash_Key_second.is_open())
-            {
-                  return false;
-            }
-            std::filesystem::path b="b";
-            std::ifstream Key1_1(b/"a1", std::ios::in | std::ios::binary);
-            std::ifstream Key1_2H(b/"a2H", std::ios::in | std::ios::binary);
-            std::ifstream Key2_1(b/"b1", std::ios::in | std::ios::binary);
-            std::ifstream Key2_2H(b/"b2H", std::ios::in | std::ios::binary);
-            std::ifstream Hash_Key(b/"c", std::ios::in | std::ios::binary);
-            
-            if(!Key1_1.is_open() || !Key1_2H.is_open() || !Key2_1.is_open() || !Key2_2H.is_open() || !Hash_Key.is_open())
-            {
-                  return false;
-            }
-            std::filesystem::path c="c";
-            std::ifstream Data_f(c/"data", std::ios::in | std::ios::binary);
-            std::ifstream Hash_f(c/"hash", std::ios::in | std::ios::binary);
-
-            if(!Data_f.is_open() || !Hash_f.is_open())
-            {
-                  return false;
-            }
-
-
-
-            Keya1_1.close();
-            Keya1_H.close();
-            Keya2_1.close();
-            Keya2_H.close();
-            Keya3_1.close();
-            Keya3_H.close();
-            Keyb1_1.close();
-            Keyb1_H.close();
-            Keyb2_1.close();
-            Keyb2_H.close();
-            Keyb3_1.close();
-            Keyb3_H.close();
-            Hash_Key_second.close();
-
-            Key1_1.close();
-            Key1_2H.close();
-            Key2_1.close();
-            Key2_2H.close();
-            Hash_Key.close();
-
-            Data_f.close();
-            Hash_f.close();
-            return true;
-      }
 
       public:
 
       guardsman()
       {
-            get_key();
-
-            if(!check_file())std::exit(1);
-            if(!reading_second_key())std::exit(1);
-            if(!reading_main_key())std::exit(1);
+            getting_key();
+            if(!reading_second_key()){ std::cout<<"пошкодження допомігних ключів"<<std::endl; std::exit(1);}
+            if(!reading_main_key()){std::cout<<"пошкодження головних ключів"<<std::endl; std::exit(1);}
 
       }
 
@@ -669,9 +608,12 @@ class guardsman
       {
             Gen_temp();
 
-            if(!change_cipher("c"))std::exit(1); 
-            if(!change_cipher("d"))std::exit(1);
-            if(!writing_a_main_key())std::exit(1);
-            if(!writing_a_secondary_key())std::exit(1);
+            if(!change_cipher("c")){ std::cout<<"Пробелема під час перезаписування"<<std::endl; std::exit(1); }
+
+            if(!change_cipher("d")){ std::cout<<"Пробелема під час перезаписування"<<std::endl; std::exit(1); }
+
+            if(!writing_a_main_key()){ std::cout<<"Проблема під час запису головних ключів"<<std::endl; std::exit(1) ;}
+
+            if(!writing_a_secondary_key()){ std::cout<<"Проблема під час запису додаткових ключів"<<std::endl; std::exit(1) ;} 
       }
 };
