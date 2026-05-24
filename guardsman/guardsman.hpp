@@ -479,11 +479,10 @@ class guardsman
             for(size_t i(3);i>=0;--i){}
       }
 
-      bool change_cipher()
+      bool change_cipher(const std::filesystem::path folder)
       {
-            std::filesystem::path c = "c";
-            std::ifstream Data_f(c/"data", std::ios::in | std::ios::binary);
-            std::ifstream Hash_f(c/"hash", std::ios::in | std::ios::binary);
+            std::ifstream Data_f(folder/"data", std::ios::in | std::ios::binary);
+            std::ifstream Hash_f(folder/"hash", std::ios::in | std::ios::binary);
 
             if(!Data_f.is_open())return false;
             if(!Hash_f.is_open())return false;
@@ -502,7 +501,7 @@ class guardsman
             Hash_f.seekg(0,std::ios::beg);
             Hash.resize(size_f);
             Hash_f.read(Hash.data(),size_f);
-            if(!checking(text,Hash,Hash_key,key2)){std::cout<<"Не правельний хеш"<<std::endl ;return false; }
+            if(!checking(text,Hash,Hash_key,key2));return false;
             Data_f.close();
             Hash_f.close();
             
@@ -513,8 +512,8 @@ class guardsman
 
             XOR(Hash,temp2);
 
-            std::ofstream Data_f1(c/"data", std::ios::out | std::ios::binary);
-            std::ofstream Hash_f1(c/"hash", std::ios::out | std::ios::binary);
+            std::ofstream Data_f1(folder/"data", std::ios::out | std::ios::binary);
+            std::ofstream Hash_f1(folder/"hash", std::ios::out | std::ios::binary);
 
             Data_f1.write(text.data(),text.size());
             Hash_f1.write(Hash.data(),Hash.size());
@@ -612,9 +611,9 @@ class guardsman
       {
             get_key();
 
-            if(!check_file()){ std::cout<<"файлів не знайдено"<<std::endl; std::exit(1);}
-            if(!reading_second_key()){ std::cout<<"пошкодження допомігних ключів"<<std::endl; std::exit(1);}
-            if(!reading_main_key()){std::cout<<"пошкодження головних ключів"<<std::endl; std::exit(1);}
+            if(!check_file())std::exit(1);
+            if(!reading_second_key())std::exit(1);
+            if(!reading_main_key())std::exit(1);
 
       }
 
@@ -670,10 +669,9 @@ class guardsman
       {
             Gen_temp();
 
-            if(!change_cipher()){ std::cout<<"Пробелема під час перезаписування"<<std::endl; std::exit(1); }
-
-            if(!writing_a_main_key()){ std::cout<<"Проблема під час запису головних ключів"<<std::endl; std::exit(1) ;}
-
-            if(!writing_a_secondary_key()){ std::cout<<"Проблема під час запису додаткових ключів"<<std::endl; std::exit(1) ;} 
+            if(!change_cipher("c"))std::exit(1); 
+            if(!change_cipher("d"))std::exit(1);
+            if(!writing_a_main_key())std::exit(1);
+            if(!writing_a_secondary_key())std::exit(1);
       }
 };
