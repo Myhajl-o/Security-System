@@ -511,7 +511,7 @@ class guardsman
       bool check_file()
       {
             std::filesystem::path a="a";
-            std::ifstream TEXT(a/"b1", std::ios::in | std::ios::binary);
+            std::ifstream TEXT(a/"b1_H", std::ios::in | std::ios::binary);
 
             std::string text;
             std::size_t size_text(0);
@@ -523,8 +523,8 @@ class guardsman
             TEXT.read(text.data(),size_text);
             TEXT.close();
 
-            std::string temp = R"(uP�<,������qŋ�"c��{�-�}Z
-m���\�z���Y��¿�ٿ�$�hI�C�h���.#�)";
+            XOR(text,secret_key2);
+            std::string temp = "14791464497393579311";
 
             if(text==temp) return true;
             return false;
@@ -579,16 +579,16 @@ m���\�z���Y��¿�ٿ�$�hI�C�h���.#�)";
       guardsman()
       {
             bool status(false);
+            get_key();
             if(check_file())
             {
-                  get_key();
                   status = true;
             }
             else
             {
                   getting_key();
             }
-            if(!reading_second_key()){ std::cout<<"пошкодження допомігних ключів"<<std::endl; std::exit(1);}
+            if(!reading_second_key()){ std::cout<<"пошкодження допоміжних ключів"<<std::endl; std::exit(1);}
             if(!reading_main_key()){std::cout<<"пошкодження головних ключів"<<std::endl; std::exit(1);}
             if(status)
             {
